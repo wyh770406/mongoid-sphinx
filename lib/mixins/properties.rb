@@ -40,9 +40,9 @@ module CouchRest # :nodoc:
       def attributes
         data = {} 
 
-        self.properties.collect { |p|
-          { p.name.intern => self.send(p.name) } }.each { |h|
-            data.merge! h }
+        self.properties.collect do |p|
+          data.merge!({ p.name.intern => self.send(p.name) })
+        end
 
         return data
       end

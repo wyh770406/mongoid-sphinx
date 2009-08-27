@@ -1,37 +1,37 @@
-# CouchSphinx, a full text indexing extension for CouchDB/CouchRest using
+# MongoSphinx, a full text indexing extension for MongoDB using
 # Sphinx.
 #
-# This file contains the CouchSphinx::Indexer::XMLDocset and
-# CouchSphinx::Indexer::XMLDoc classes.
+# This file contains the MongoSphinx::Indexer::XMLDocset and
+# MongoSphinx::Indexer::XMLDoc classes.
 
-# Namespace module for the CouchSphinx gem.
+# Namespace module for the MongoSphinx gem.
 
-module CouchSphinx #:nodoc:
+module MongoSphinx #:nodoc:
 
   # Module Indexer contains classes for creating XML input documents for the
   # indexer. Each Sphinx index consists of a single "sphinx:docset" with any
   # number of "sphinx:document" tags.
   #
   # The XML source can be generated from an array of CouchRest objects or from
-  # an array of Hashes containing at least fields "couchrest-type" and "_id"
-  # as returned by CouchDB view "CouchSphinxIndex/couchrests_by_timestamp".
+  # an array of Hashes containing at least fields "classname" and "_id"
+  # as returned by MongoDB view "MongoSphinxIndex/couchrests_by_timestamp".
   #
   # Sample:
   #
   #   rows = [{ 'name' => 'John', 'phone' => '199 43828',
-  #             'couchrest-type' => 'Address', '_id' => 'Address-234164'
+  #             'classname' => 'Address', '_id' => 'Address-234164'
   #           },
   #           { 'name' => 'Sue', 'mobile' => '828 19439',
-  #             'couchrest-type' => 'Address', '_id' => 'Address-422433'
+  #             'classname' => 'Address', '_id' => 'Address-422433'
   #          }
   #   ]
-  #   puts CouchSphinx::Indexer::XMLDocset.new(rows).to_s
+  #   puts MongoSphinx::Indexer::XMLDocset.new(rows).to_s
   #
   #   <?xml version="1.0" encoding="utf-8"?>
   #   <sphinx:docset>
   #     <sphinx:schema>
   #       <sphinx:attr name="csphinx-class" type="multi"/>
-  #       <sphinx:field name="couchrest-type"/>
+  #       <sphinx:field name="classname"/>
   #       <sphinx:field name="name"/>
   #       <sphinx:field name="phone"/>
   #       <sphinx:field name="mobile"/>
@@ -39,7 +39,7 @@ module CouchSphinx #:nodoc:
   #     </sphinx:schema>
   #     <sphinx:document id="234164">
   #       <csphinx-class>336,623,883,1140</csphinx-class>
-  #       <couchrest-type>Address</couchrest-type>
+  #       <classname>Address</classname>
   #       <name><![CDATA[[John]]></name>
   #       <phone><![CDATA[[199 422433]]></phone>
   #       <mobile><![CDATA[[]]></mobile>
@@ -47,7 +47,7 @@ module CouchSphinx #:nodoc:
   #     </sphinx:document>
   #     <sphinx:document id="423423">
   #       <csphinx-class>336,623,883,1140</csphinx-class>
-  #       <couchrest-type>Address</couchrest-type>
+  #       <classname>Address</classname>
   #       <name><![CDATA[[Sue]]></name>
   #       <phone><![CDATA[[]]></phone>
   #       <mobile><![CDATA[[828 19439]]></mobile>
@@ -98,9 +98,9 @@ module CouchSphinx #:nodoc:
           if row.kind_of? CouchRest::Document
             object = row
           elsif row.kind_of? Hash
-            row = row['value'] if row['couchrest-type'].nil?
+            row = row['value'] if row['classname'].nil?
 
-            if row and (class_name = row['couchrest-type'])
+            if row and (class_name = row['classname'])
               object = eval(class_name.to_s).new(row) rescue nil
             end
           end
@@ -118,7 +118,7 @@ module CouchSphinx #:nodoc:
           xml << "<sphinx:field name=\"#{key}\"/>"
         end
 
-        xml << '<sphinx:field name="couchrest-type"/>'
+        xml << '<sphinx:field name="classname"/>'
         xml << '<sphinx:attr name="csphinx-class" type="multi"/>'
 
         xml << '</sphinx:schema>'
@@ -185,9 +185,9 @@ module CouchSphinx #:nodoc:
         xml = "<sphinx:document id=\"#{id}\">"
 
         xml << '<csphinx-class>'
-        xml << CouchSphinx::MultiAttribute.encode(class_name)
+        xml << MongoSphinx::MultiAttribute.encode(class_name)
         xml << '</csphinx-class>'
-        xml << "<couchrest-type>#{class_name}</couchrest-type>"
+        xml << "<classname>#{class_name}</classname>"
 
         properties.each do |key, value|
           xml << "<#{key}><![CDATA[[#{value}]]></#{key}>"

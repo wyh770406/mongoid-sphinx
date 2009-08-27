@@ -1,11 +1,11 @@
-# CouchSphinx, a full text indexing extension for CouchDB/CouchRest using
+# MongoSphinx, a full text indexing extension for MongoDB using
 # Sphinx.
 #
-# This file contains the CouchSphinx::MultiAttribute class.
+# This file contains the MongoSphinx::MultiAttribute class.
 
-# Namespace module for the CouchSphinx gem.
+# Namespace module for the MongoSphinx gem.
 
-module CouchSphinx #:nodoc:
+module MongoSphinx #:nodoc:
 
   # Module MultiAttribute implements helpers to translate back and
   # forth between Ruby Strings and an array of integers suitable for Sphinx
@@ -21,9 +21,9 @@ module CouchSphinx #:nodoc:
   #
   # Sample:
   #
-  #   CouchSphinx::MultiAttribute.encode('Hello')
+  #   MongoSphinx::MultiAttribute.encode('Hello')
   #   => "328,613,876,1132,1391"
-  #   CouchSphinx::MultiAttribute.decode('328,613,876,1132,1391')
+  #   MongoSphinx::MultiAttribute.decode('328,613,876,1132,1391')
   #   => "Hello"
 
   module MultiAttribute
@@ -40,8 +40,8 @@ module CouchSphinx #:nodoc:
       return str.bytes.collect { |c| (offset+= 0x0100) + c }.join(',')
     end
 
-    # Returns the original CouchDB ID created from a Sphinx ID. Only works if
-    # the ID was created from a CouchDB ID before!
+    # Returns the original MongoDB ID created from a Sphinx ID. Only works if
+    # the ID was created from a MongoDB ID before!
     #
     # Parameters:
     #

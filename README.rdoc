@@ -1,23 +1,22 @@
-= CouchSphinx
+= MongoSphinx
 
-The CouchSphinx library implements an interface between CouchDB and Sphinx 
-supporting CouchRest to automatically index objects in Sphinx. It tries to
-act as transparent as possible: Just an additional method in the CouchRest
-domain specific language and some Sphinx configuration are needed to get
-going.
+The MongoSphinx library implements an interface between MongoDBand Sphinx 
+supporting MongoMapper to automatically index objects in Sphinx. It tries to
+act as transparent as possible: Just an additional method in MongoMapper
+and some Sphinx configuration are needed to get going.
 
 == Prerequisites
 
-CouchSphinx needs gems CouchRest and Riddle as well as a running Sphinx
+MongoSphinx needs gems MongoMapper and Riddle as well as a running Sphinx
 and a CouchDB installation.
 
   sudo gem sources -a http://gems.github.com  # Only needed once!
   sudo gem install riddle
-  sudo gem install couchrest
-  sudo gem install ulbrich-couchsphinx
+  sudo gem install mongomapper
+  sudo gem install burke-mongosphinx
 
-No additional configuraton is needed for interfacing with CouchDB: Setup is
-done when CouchRest is able to talk to the CouchDB server.
+No additional configuraton is needed for interfacing with MongoDB: Setup is
+done when MongoMapper is able to talk to the MongoDB server.
 
 A proper "sphinx.conf" file and a script for retrieving index data have to
 be provided for interfacing with Sphinx: Sorry, no UltraSphinx like
@@ -35,14 +34,14 @@ This is a sample configuration for a single "main" index:
     pid_file = ./sphinx/searchd.pid
   }
 
-  source couchblog {
+  source mongoblog {
     type = xmlpipe2
   
     xmlpipe_command = ./sphinxsource.rb
   }
 
-  index couchblog {
-    source = couchblog
+  index mongoblog {
+    source = mongoblog
 
     charset_type = utf-8
     path = ./sphinx/sphinx_index_main
@@ -57,10 +56,11 @@ script interfacing with one single instance:
   require 'rubygems'
   require 'lib/models' # Depends on location of model files
 
-  data = SERVER.default_database.view('CouchSphinxIndex/couchrests_by_timestamp')
+###TODO
+  data = SERVER.default_database.view('MongoSphinxIndex/couchrests_by_timestamp')
   rows = data['rows'] rescue []
 
-  puts CouchSphinx::Indexer::XMLDocset.new(rows).to_s
+  puts MongoSphinx::Indexer::XMLDocset.new(rows).to_s
 
 == Models
 
@@ -68,19 +68,19 @@ Use method <tt>fulltext_index</tt> to enable indexing of a model. The
 default is to index all attributes but it is recommended to provide a list of
 attribute keys.
 
-A side effect of calling this method is, that CouchSphinx overrides the
-default of letting CouchDB create new IDs: Sphinx only allows numeric IDs and
-CouchSphinx forces new objects with the name of the class, a hyphen and an
+A side effect of calling this method is, that MongoSphinx overrides the
+default of letting MongoDB create new IDs: Sphinx only allows numeric IDs and
+MongoSphinx forces new objects with the name of the class, a hyphen and an
 integer as ID (e.g. <tt>Post-38497238</tt>). Again: Only these objects are
 indexed due to internal restrictions of Sphinx.
 
 Sample:
 
-  class Post < CouchRest::ExtendedDocument
-    use_database SERVER.default_database
+  class Post
+    include MongoMapper::Document
 
-    property :title
-    property :body
+    key :title, String
+    key :body, String
 
     fulltext_index :title, :body
   end
@@ -89,25 +89,16 @@ Add options <tt>:server</tt> and <tt>:port</tt> to <tt>fulltext_index</tt> if
 the Sphinx server to query is running on a different server (defaults to
 "localhost" with port 3312).
 
-If you are sure your Sphinx is compiled with 64-bit support, you may add
-option <tt>:idsize</tt> with value <tt>64</tt> to generate 64-bit IDs for
-CouchDB (defaults to 32-bits).
-
 Here is a full-featured sample setting additional options:
 
-  fulltext_index :title, :body, :server => 'my.other.server', :port => 3313,
-    :idsize => 64
+  fulltext_index :title, :body, :server => 'my.other.server', :port => 3313
 
 == Indexing
 
-CouchSphinx also adds a new design document to CouchDB: It needs to collect
-all relevant objects for running the Sphinx indexer and adds its own views
-to do so. Have a look at CouchDB design document "CouchSphinxIndex" for
-details.
-
 Automatically starting the reindexing of objects the moment new objects are
-created can be implemented by adding a save_callback to the model class:
-
+created can be implemented by adding a save callback to the model class:
+    
+  ###TODO
   save_callback :after do |object|
     `sudo indexer --all --rotate` # Configure sudo to allow this call...
   end
@@ -147,7 +138,9 @@ Sample:
 
 == Copyright & License
 
-Copyright (c) 2009 Holtzbrinck Digital GmbH, Jan Ulbrich
+Copyright (c) 2009 Burke Libbey, Ryan Neufeld
+
+CouchSphinx Copyright (c) 2009 Holtzbrinck Digital GmbH, Jan Ulbrich
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation

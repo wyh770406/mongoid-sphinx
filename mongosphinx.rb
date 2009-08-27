@@ -1,26 +1,22 @@
-# CouchSphinx, a full text indexing extension for CouchDB/CouchRest using
+# MongoSphinx, a full text indexing extension for using
 # Sphinx.
 #
 # This file contains the includes implementing this library. Have a look at
 # the README.rdoc as a starting point.
 
-require 'rubygems'
-
-require 'couchrest'
+begin
+  require 'rubygems'
+rescue LoadError; end
 require 'riddle'
 
-# Version number to use for updating CouchDB design document CouchSphinxIndex
-# if needed.
 
-module CouchSphinx
-  if (match = __FILE__.match(/couchsphinx-([0-9.-]*)/))
+module MongoSphinx
+  if (match = __FILE__.match(/mongosphinx-([0-9.-]*)/))
     VERSION = match[1]
   else
     VERSION = 'unknown'
   end
 end
-
-# Require the stuff implementing this library...
 
 require 'lib/multi_attribute'
 require 'lib/indexer'
