@@ -95,7 +95,7 @@ module MongoSphinx #:nodoc:
         rows.each do |row|
           object = nil
 
-          if row.kind_of? CouchRest::Document
+          if row.kind_of? MongoMapper::Document
             object = row
           elsif row.kind_of? Hash
             row = row['value'] if row['classname'].nil?

@@ -5,7 +5,7 @@
 
 # Patches to the CouchRest library.
 
-module CouchRest # :nodoc:
+module MongoMapper # :nodoc:
   module Mixins # :nodoc:
 
     # Patches to the CouchRest Properties module: Adds the "attributes" method 
@@ -35,18 +35,6 @@ module CouchRest # :nodoc:
 
     module Properties
 
-      # Returns a Hash of all properties plus the ID of the document.
-
-      def attributes
-        data = {} 
-
-        self.properties.collect do |p|
-          data.merge!({ p.name.intern => self.send(p.name) })
-        end
-
-        return data
-      end
-
       # Returns a Hash of all attributes allowed to be indexed. As a side
       # effect it sets the fulltext_keys variable if still blank or empty.
 
@@ -54,11 +42,12 @@ module CouchRest # :nodoc:
         clas = self.class
 
         if not clas.fulltext_keys or clas.fulltext_keys.empty?
-          clas.fulltext_keys = self.properties.collect { |p| p.name.intern } 
+          clas.fulltext_keys = self.attributes.collect { |k,v| k.intern } 
         end
 
-        return self.attributes.reject { |k, v|
-               not (clas.fulltext_keys.include? k) }
+        return self.attributes.reject do |k, v|
+          not (clas.fulltext_keys.include? k.intern)
+        end
       end
 
       # Returns the numeric part of the document ID (compatible to Sphinx).

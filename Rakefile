@@ -1,4 +1,4 @@
-# CouchSphinx, a full text indexing extension for CouchDB/CouchRest using
+# MongoSphinx, a full text indexing extension for MongoDB using
 # Sphinx.
 
 require 'rubygems'
@@ -7,18 +7,18 @@ require 'rake/gempackagetask'
 require 'find'
 
 spec = Gem::Specification.new do |spec|
-  files = FileList['README.rdoc', 'couchsphinx.rb', 'tests/*.rb'].to_a
+  files = FileList['README.rdoc', 'mongosphinx.rb', 'tests/*.rb'].to_a
 
   Find.find('lib') { |path|
     files << path if not File.stat(path).directory? }
 
   spec.platform = Gem::Platform::RUBY
-  spec.name = 'couchsphinx'
-  spec.homepage = 'http://github.com/ulbrich/couchsphinx'
+  spec.name = 'mongosphinx'
+  spec.homepage = 'http://github.com/burke/mongosphinx'
   spec.version = '0.1'
-  spec.author = 'Jan Ulbrich'
-  spec.email = 'jan.ulbrich @nospam@ holtzbrinck.com'
-  spec.summary = 'A full text indexing extension for CouchDB/CouchRest using Sphinx.'
+  spec.author = 'Burke Libbey'
+  spec.email = 'burke@burkelibbey.org'
+  spec.summary = 'A full text indexing extension for MongoDB using Sphinx.'
   spec.files = files
   spec.require_path = '.'
   spec.test_files = Dir.glob('tests/*.rb')
@@ -26,7 +26,7 @@ spec = Gem::Specification.new do |spec|
   spec.executables = nil
   spec.extra_rdoc_files = ['README.rdoc']
   spec.rdoc_options << '--exclude' << 'pkg' << '--exclude' << 'tmp' <<
-    '--all' << '--title' << 'CouchSphinx' << '--main' << 'README.rdoc'
+    '--all' << '--title' << 'MongoSphinx' << '--main' << 'README.rdoc'
 end
 
 Rake::GemPackageTask.new(spec) do |pkg|
@@ -49,18 +49,18 @@ task :doc do
 
   puts 'Create rdoc documentation from the code'
   puts `(rdoc --exclude pkg --exclude tmp \
-          --all  --title "CouchSphinx" README.rdoc lib couchsphinx.rb) 1>&2`
+          --all  --title "MongoSphinx" README.rdoc lib mongosphinx.rb) 1>&2`
 end
 
-desc 'Update the couchsphinx.gemspec file with new snapshot of files to bundle'
+desc 'Update the mongosphinx.gemspec file with new snapshot of files to bundle'
 task :gemspecs do
-  puts 'Update the couchsphinx.gemspec file with new snapshot of files to bundle.'
+  puts 'Update the mongosphinx.gemspec file with new snapshot of files to bundle.'
 
   # !!Warning: We can't use spec.to_ruby as this generates executable code
   # which would break Github gem generation...
 
   template = <<EOF
-# CouchSphinx, a full text indexing extension for CouchDB/CouchRest using
+# MongoSphinx, a full text indexing extension for MongoDB using
 # Sphinx.
 
 Gem::Specification.new do |spec|
@@ -80,5 +80,5 @@ Gem::Specification.new do |spec|
 end
 EOF
 
-  File.open('couchsphinx.gemspec', 'w').write(template)
+  File.open('mongosphinx.gemspec', 'w').write(template)
 end

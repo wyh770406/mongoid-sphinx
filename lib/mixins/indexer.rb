@@ -32,7 +32,8 @@ module MongoMapper # :nodoc:
       # plus pure numeric ID compatible with Sphinx) for new objects).
       #
       # Last but not least method "by_fulltext_index" is defined allowing a
-      # full text search like "foo @title bar" within the context of the
+     
+     # full text search like "foo @title bar" within the context of the
       # current class.
       #
       # Samples:
@@ -54,6 +55,28 @@ module MongoMapper # :nodoc:
       #   post.class
       #   => Post
 
+      def save_callback()
+        object = self
+        if object.id.nil?
+          idsize = fulltext_opts[:idsize] || 32
+          limit = (1 << idsize) - 1
+          
+          while true
+            id = rand(limit)
+            candidate = "#{self.class.to_s}-#{id}"
+            
+            begin
+              object.class.find(candidate) # Resource not found exception if available
+            rescue MongoMapper::DocumentNotFound
+              object.id = candidate
+              break
+            end
+          end
+        end
+      end
+      
+      
+      
       module ClassMethods
 
         # Method for enabling fulltext indexing and for defining the fields to
@@ -87,26 +110,10 @@ module MongoMapper # :nodoc:
           # Sphinx. If an ID already exists, we try to match it with our 
           # Schema and cowardly ignore if not.
 
-          save_callback :before do |object|
-            if object.id.nil?
-              idsize = fulltext_opts[:idsize] || 32
-              limit = (1 << idsize) - 1
+          before_save :save_callback
 
-              while true
-                id = rand(limit)
-                candidate = "#{self.class.to_s}-#{id}"
-
-                begin
-                  object.class.find(candidate) # Resource not found exception if available
-                rescue MongoMapper::DocumentNotFound
-                  object.id = candidate
-                  break
-                end
-              end
-            end
-          end
-        end
-
+        end 
+      
         # Searches for an object of this model class (e.g. Post, Comment) and
         # the requested query string. The query string may contain any query 
         # provided by Sphinx.
@@ -161,44 +168,12 @@ module MongoMapper # :nodoc:
                      '-' + row[:doc].to_s) rescue nil }.compact
 
             return ids if options[:raw]
-            return multi_get(ids)
+            return Object.constget(row[:attributes]['csphinx-class']).find_all_by_ids(ids)
           else
             return []
           end
         end
-
-        # Returns objects for all provided keys not reducing lookup to a
-        # certain type. Casts to a MongoMapper object if possible.
-        #
-        # Parameters:
-        #
-        # [ids] Array of document IDs to retrieve
-
-        #TODO likely not needed
-        def multi_get(ids)
-          result = MongoMapper.post(SERVER.default_database.to_s +
-                   '/_all_docs?include_docs=true', :keys => ids)
-
-          return result['rows'].collect { |row|
-                   row = row['doc'] if row['couchrest-type'].nil?
-
-                   if row and (class_name = row['couchrest-type'])
-                     eval(class_name.to_s).new(row) rescue row
-                   else
-                     row
-                   end
-                 }
-        end
       end
     end
-  end
-end
-
-# Include the Indexer mixin from the original Document class of
-# MongoMapper which adds a few methods and allows calling method indexed_with.
-
-module MongoMapper # :nodoc:
-  class Document # :nodoc:
-    include MongoMapper::Mixins::Indexer
   end
 end
