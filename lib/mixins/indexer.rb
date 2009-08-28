@@ -141,7 +141,7 @@ module MongoMapper # :nodoc:
             client = Riddle::Client.new(fulltext_opts[:server],
                      fulltext_opts[:port])
 
-            query = query + " @mongomapper-type #{self}"
+            query = query + " @classname #{self}"
           end
 
           client.match_mode = options[:match_mode] || :extended
@@ -163,12 +163,14 @@ module MongoMapper # :nodoc:
 
           #TODO
           if result and result[:status] == 0 and (matches = result[:matches])
-            ids = matches.collect { |row| (MongoSphinx::MultiAttribute.decode(
-                     row[:attributes]['csphinx-class']) +
-                     '-' + row[:doc].to_s) rescue nil }.compact
+            classname = nil
+            ids = matches.collect do |row|
+              classname = MongoSphinx::MultiAttribute.decode(row[:attributes]['csphinx-class'])
+              (classname + '-' + row[:doc].to_s) rescue nil
+            end.compact
 
             return ids if options[:raw]
-            return Object.constget(row[:attributes]['csphinx-class']).find_all_by_ids(ids)
+            return Object.const_get(classname).find(ids)
           else
             return []
           end

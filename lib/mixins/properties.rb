@@ -1,7 +1,7 @@
-# CouchSphinx, a full text indexing extension for CouchDB/CouchRest using
+# MongoSphinx, a full text indexing extension for MongoDB using
 # Sphinx.
 #
-# This file contains the CouchRest::Mixins::Properties module.
+# This file contains the MongoMapper::Mixins::Properties module.
 
 # Patches to the CouchRest library.
 
