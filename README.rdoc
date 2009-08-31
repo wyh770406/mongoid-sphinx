@@ -37,7 +37,7 @@ This is a sample configuration for a single "main" index:
   source mongoblog {
     type = xmlpipe2
   
-    xmlpipe_command = ./sphinxsource.rb
+    xmlpipe_command = "rake sphinx:genxml"
   }
 
   index mongoblog {
@@ -47,20 +47,18 @@ This is a sample configuration for a single "main" index:
     path = ./sphinx/sphinx_index_main
   }
 
-The script "sphinxsource.rb" providing the data to index may vary
-depending on the number of CouchDB instances it talks to. This is a simple
-script interfacing with one single instance:
+Notice the line "xmlpipe_command =". This is what the indexer runs to generate 
+its input. You can change this to whatever works best for you, but I set it up as 
+a rake task, with the following in `lib/tasks/sphinx.rake` .
 
-  #!/usr/bin/env ruby
+Here, :fields is a list of fields to export. Performance tends to suffer if you export
+everything, so you'll probably want to just list the fields you're indexing.
 
-  require 'rubygems'
-  require 'lib/models' # Depends on location of model files
-
-###TODO
-  data = SERVER.default_database.view('MongoSphinxIndex/couchrests_by_timestamp')
-  rows = data['rows'] rescue []
-
-  puts MongoSphinx::Indexer::XMLDocset.new(rows).to_s
+  namespace :sphinx do
+    task :genxml => :environment do
+      puts MongoSphinx::Indexer::XMLDocset.new(Food.all(:fields => 'name')).to_s
+    end
+  end
 
 == Models
 
@@ -96,16 +94,20 @@ Here is a full-featured sample setting additional options:
 == Indexing
 
 Automatically starting the reindexing of objects the moment new objects are
-created can be implemented by adding a save callback to the model class:
+created can be implemented by adding a filter to the model class:
     
-  ###TODO
-  save_callback :after do |object|
-    `sudo indexer --all --rotate` # Configure sudo to allow this call...
-  end
+ after_save :reindex
+  def reindex
+   `sudo indexer --all --rotate` # Configure sudo to allow this call...
+   end
 
 This or a similar callback should be added to all models needing instant
 indexing. If indexing is not that crucial or load is high, some additional
 checks for the time of the last call should be added. 
+
+Keep in mind that reindexing is not incremental, and xml is generated to pass
+data from mongo to sphinx. It's not a speedy operation on large datasets.
+
 
 == Queries
 
