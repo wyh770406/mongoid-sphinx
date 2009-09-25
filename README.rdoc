@@ -8,7 +8,7 @@ and some Sphinx configuration are needed to get going.
 == Prerequisites
 
 MongoSphinx needs gems MongoMapper and Riddle as well as a running Sphinx
-and a CouchDB installation.
+and a MongoDB installation.
 
   sudo gem sources -a http://gems.github.com  # Only needed once!
   sudo gem install riddle
@@ -97,9 +97,9 @@ Automatically starting the reindexing of objects the moment new objects are
 created can be implemented by adding a filter to the model class:
     
  after_save :reindex
-  def reindex
-   `sudo indexer --all --rotate` # Configure sudo to allow this call...
-   end
+ def reindex
+  `sudo indexer --all --rotate` # Configure sudo to allow this call...
+  end
 
 This or a similar callback should be added to all models needing instant
 indexing. If indexing is not that crucial or load is high, some additional
@@ -114,9 +114,7 @@ data from mongo to sphinx. It's not a speedy operation on large datasets.
 An additional instance method <tt>by_fulltext_index</tt> is added for each
 fulltext indexed model. This method takes a Sphinx query like
 "foo @title bar", runs it within the context of the current class and returns
-an Array of matching CouchDB documents. Use
-<tt>CouchRest::ExtendedDocument.by_fulltext_index</tt> if you want to find
-any document matching the query and not only a certain class.
+an Array of matching MongoDB documents.
 
 Samples:
 
