@@ -74,12 +74,6 @@ module MongoSphinx #:nodoc:
 
       attr_reader :xml_footer
 
-      # Makes sure the output if appearing on stdout and not buffered.
-      def self.p(s)
-        puts s
-        $stdout.flush
-      end
-
       # Streams xml of all objects in a klass to the stdout. This makes sure you can process large collections.
       #
       # Options:
@@ -96,19 +90,24 @@ module MongoSphinx #:nodoc:
       #  xmlpipe_command = ./script/runner "MongoSphinx::Indexer::XMLDocset.stream(Document)"
       #
       def self.stream(klass, options = {})
+        STDOUT.sync = true # Make sure we really stream..
+
         batch_size = options.delete(:batch_size) || 10000 # The number of documents in each batch process. Default is 10000.
         max_offset = options.delete(:max_offset) || klass.count # The maximum offset. Default is klass.count.
 
-        self.p '<?xml version="1.0" encoding="utf-8"?>'
+        puts '<?xml version="1.0" encoding="utf-8"?>'
 
-        self.p '<sphinx:docset>'
+        puts '<sphinx:docset>'
 
         # Schema
-        self.p '<sphinx:schema>'
+        puts '<sphinx:schema>'
         klass.fulltext_keys.each do |key, value|
-          self.p "<sphinx:field name=\"#{key}\"/>"
+          puts "<sphinx:field name=\"#{key}\"/>"
         end
-        self.p '</sphinx:schema>'
+        # FIXME: What is this attribute?
+        puts '<sphinx:field name="classname"/>'
+        puts '<sphinx:attr name="csphinx-class" type="multi"/>'
+        puts '</sphinx:schema>'
 
         # Content
         offset = 0
@@ -117,11 +116,11 @@ module MongoSphinx #:nodoc:
           offset = offset + batch_size
           
           objects.each do |object|
-            self.p XMLDoc.from_object(object)
+            puts XMLDoc.from_object(object)
           end
         end
 
-        self.p '</sphinx:docset>'
+        puts '</sphinx:docset>'
       end
 
       # Creates a XMLDocset object from the provided data. It defines a

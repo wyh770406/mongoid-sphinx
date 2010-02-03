@@ -7,7 +7,7 @@
 begin
   require 'rubygems'
 rescue LoadError; end
-require 'mongomapper'
+require 'mongo_mapper'
 require 'riddle'
 
 
