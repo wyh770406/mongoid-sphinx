@@ -77,23 +77,23 @@ module MongoSphinx #:nodoc:
       # Streams xml of all objects in a klass to the stdout. This makes sure you can process large collections.
       #
       # Options:
-      # All options are passed to the find request except:
-      #  batch_size - The number of documents in each batch process. Default is 10000.
-      #  max_offset - The maximum offset. Default is klass.count.
+      #  attributes (required) - The attributes that are put in the sphinx xml.
+      #  id_attribute (optional) - The attribute to use as id while indexing (should be integer).
+      #                            If none is specified we'll create a useless one.
       #
       # Example:
-      #  MongoSphinx::Indexer::XMLDocset.stream(Document, :fields => 'name,index_helper', :batch_size => 1000)
-      # This will create an XML stream to stdout. Each batch output creates the xml for 1000 Documents.
-      # The stream will stop at max_offset Document.count (so all are processed).
+      #  MongoSphinx::Indexer::XMLDocset.stream(Document, :attributes => %w(title content))
+      # This will create an XML stream to stdout. 
       #
       # Configure in your sphinx.conf like
-      #  xmlpipe_command = ./script/runner "MongoSphinx::Indexer::XMLDocset.stream(Document)"
+      #  xmlpipe_command = ./script/runner "MongoSphinx::Indexer::XMLDocset.stream(Document, :attributes => %w(title content))"
       #
       def self.stream(klass, options = {})
         STDOUT.sync = true # Make sure we really stream..
-
-        batch_size = options.delete(:batch_size) || 10000 # The number of documents in each batch process. Default is 10000.
-        max_offset = options.delete(:max_offset) || klass.count # The maximum offset. Default is klass.count.
+        attributes = options[:attributes]
+        id_attribute = options[:id_attribute]
+        # raise ArgumentError, 'Missing id_attribute' if id_attribute.nil? # optional
+        raise ArgumentError, 'Missing attributes' if attributes.nil?
 
         puts '<?xml version="1.0" encoding="utf-8"?>'
 
@@ -109,15 +109,9 @@ module MongoSphinx #:nodoc:
         puts '<sphinx:attr name="csphinx-class" type="multi"/>'
         puts '</sphinx:schema>'
 
-        # Content
-        offset = 0
-        while offset < max_offset
-          objects = klass.all(options.merge({:limit => batch_size, :offset => offset}))
-          offset = offset + batch_size
-          
-          objects.each do |object|
-            puts XMLDoc.from_object(object)
-          end
+        cursor = Mongo::Cursor.new(klass.collection)
+        while document_hash = cursor.next_document
+          XMLDoc.stream_for_hash(document_hash, klass, attributes, id_attribute)
         end
 
         puts '</sphinx:docset>'
@@ -205,6 +199,28 @@ module MongoSphinx #:nodoc:
       # Returns the encoded data.
 
       attr_reader :xml
+
+      def self.stream_for_hash(hash, klass, attributes, id_attribute = nil)
+        sphinx_compatible_id = hash[id_attribute].to_i unless id_attribute.nil?
+        sphinx_compatible_id ||= hash['_id'].to_s.hex % (2**64) # FIXME. This creates a bogus unique id.
+        
+        class_name = klass.to_s
+
+        puts "<sphinx:document id=\"#{sphinx_compatible_id}\">"
+        
+        # FIXME: Should we include this?
+        puts '<csphinx-class>'
+        puts MongoSphinx::MultiAttribute.encode(class_name)
+        puts '</csphinx-class>'
+        puts "<classname>#{class_name}</classname>"
+        
+        attributes.each do |key|
+          value = hash[key]
+          puts "<#{key}><![CDATA[[#{value}]]></#{key}>"
+        end
+
+        puts '</sphinx:document>'
+      end
 
       # Creates a XMLDoc object from the provided CouchRest object.
       #

@@ -13,16 +13,15 @@ collections.
 
   namespace :sphinx do
     task :stream => :environment do
-      MongoSphinx::Indexer::XMLDocset.stream(Food)
+      MongoSphinx::Indexer::XMLDocset.stream(Food, :attributes => %w(name description), :id_attribute => 'sphinx_id')
     end
   end
+
+This uses MongoDB cursor to better stream collection. Instead of offset. See: http://groups.google.com/group/mongodb-user/browse_thread/thread/35f01db45ea3b0bd/96ebc49b511a6b41?lnk=gst&q=skip#96ebc49b511a6b41
 
 See inline documentation on usage.
 
 === TODO
-
-Use MongoDB cursor to better stream collection. Instead of offset. See:
-http://groups.google.com/group/mongodb-user/browse_thread/thread/35f01db45ea3b0bd/96ebc49b511a6b41?lnk=gst&q=skip#96ebc49b511a6b41
 
 Use better output. Eg. $stdout.write or http://ruby-doc.org/stdlib/libdoc/stringio/rdoc/index.html.
 
