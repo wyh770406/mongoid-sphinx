@@ -1,5 +1,26 @@
 = MongoSphinx
 
+== Fork info
+
+This is a fork of http://github.com/burke/mongosphinx with some quick hacks.
+
+This are the hacks:
+
+=== Stream XML
+
+Possibility to stream xml instead of process at once. Makes it work with large
+collections.
+
+  namespace :sphinx do
+    task :stream => :environment do
+      puts MongoSphinx::Indexer::XMLDocset.stream(Food)
+    end
+  end
+
+See inline documentation on usage.  
+
+== General info
+
 The MongoSphinx library implements an interface between MongoDBand Sphinx 
 supporting MongoMapper to automatically index objects in Sphinx. It tries to
 act as transparent as possible: Just an additional method in MongoMapper
