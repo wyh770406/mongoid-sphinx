@@ -74,6 +74,56 @@ module MongoSphinx #:nodoc:
 
       attr_reader :xml_footer
 
+      # Makes sure the output if appearing on stdout and not buffered.
+      def self.p(s)
+        puts s
+        $stdout.flush
+      end
+
+      # Streams xml of all objects in a klass to the stdout. This makes sure you can process large collections.
+      #
+      # Options:
+      # All options are passed to the find request except:
+      #  batch_size - The number of documents in each batch process. Default is 10000.
+      #  max_offset - The maximum offset. Default is klass.count.
+      #
+      # Example:
+      #  MongoSphinx::Indexer::XMLDocset.stream(Document, :fields => 'name,index_helper', :batch_size => 1000)
+      # This will create an XML stream to stdout. Each batch output creates the xml for 1000 Documents.
+      # The stream will stop at max_offset Document.count (so all are processed).
+      #
+      # Configure in your sphinx.conf like
+      #  xmlpipe_command = ./script/runner "MongoSphinx::Indexer::XMLDocset.stream(Document)"
+      #
+      def self.stream(klass, options = {})
+        batch_size = options.delete(:batch_size) || 10000 # The number of documents in each batch process. Default is 10000.
+        max_offset = options.delete(:max_offset) || klass.count # The maximum offset. Default is klass.count.
+
+        self.p '<?xml version="1.0" encoding="utf-8"?>'
+
+        self.p '<sphinx:docset>'
+
+        # Schema
+        self.p '<sphinx:schema>'
+        klass.fulltext_keys.each do |key, value|
+          self.p "<sphinx:field name=\"#{key}\"/>"
+        end
+        self.p '</sphinx:schema>'
+
+        # Content
+        offset = 0
+        while offset < max_offset
+          objects = klass.all(options.merge({:limit => batch_size, :offset => offset}))
+          offset = offset + batch_size
+          
+          objects.each do |object|
+            self.p XMLDoc.from_object(object)
+          end
+        end
+
+        self.p '</sphinx:docset>'
+      end
+
       # Creates a XMLDocset object from the provided data. It defines a
       # superset of all fields of the classes to index objects for. The class
       # names are collected from the provided objects as well.
