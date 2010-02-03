@@ -110,7 +110,7 @@ module MongoMapper # :nodoc:
           # Sphinx. If an ID already exists, we try to match it with our 
           # Schema and cowardly ignore if not.
 
-          before_save :save_callback
+          # before_save :save_callback # FIXME: Disabled since it did not work for me.
 
         end 
       
