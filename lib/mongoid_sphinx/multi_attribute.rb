@@ -5,7 +5,7 @@
 
 # Namespace module for the MongoSphinx gem.
 
-module MongoSphinx #:nodoc:
+module MongoidSphinx #:nodoc:
 
   # Module MultiAttribute implements helpers to translate back and
   # forth between Ruby Strings and an array of integers suitable for Sphinx
