@@ -5,7 +5,7 @@ module MongoidSphinx
   class Configuration
     include Singleton
     
-    attr_accessible :address, :port, :configuration
+    attr_accessor :address, :port, :configuration
     
     def client
       @configuration ||= parse_config

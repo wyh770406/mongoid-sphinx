@@ -87,9 +87,9 @@ module MongoidSphinx #:nodoc:
         puts '<sphinx:field name="classname"/>'
         puts '<sphinx:attr name="csphinx-class" type="multi"/>'
         puts '</sphinx:schema>'
-
-        cursor = Mongo::Cursor.new(klass.collection.name)
-        while document_hash = cursor.next_document
+        
+        collection = Mongoid.database.collection(klass.collection.name)
+        collection.find.each do |document_hash|
           XMLDoc.stream_for_hash(document_hash, klass)
         end
 
@@ -101,7 +101,7 @@ module MongoidSphinx #:nodoc:
     class XMLDoc
 
       def self.stream_for_hash(hash, klass)
-        sphinx_compatible_id = hash['_id'].to_s.gsub(/^[a-zA-Z]*-/,'').to_i
+        sphinx_compatible_id = hash['_id'].to_i
         
         puts "<sphinx:document id=\"#{sphinx_compatible_id}\">"
         # FIXME: Should we include this?

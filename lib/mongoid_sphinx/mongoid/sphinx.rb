@@ -34,7 +34,7 @@ module Mongoid
           classname = nil
           ids = matches.collect do |row|
             classname = MongoidSphinx::MultiAttribute.decode(row[:attributes]['csphinx-class'])
-            (classname + '-' + row[:doc].to_s) rescue nil
+            row[:doc].to_s rescue nil
           end.compact
           
           return ids if options[:raw]
