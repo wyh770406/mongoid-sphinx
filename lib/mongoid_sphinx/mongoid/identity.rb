@@ -6,7 +6,7 @@ module Mongoid
       # Return an id that is sphinx compatible
       def generate_id
         while true
-          id = 100000000000000000000000 + rand(9999999999999999999)
+          id = 100000000000000000000000 + rand(4294967294) # 4,294,967,295 is the theoretical max number of documents a 32 bit sphinx install can index
           candidate = id.to_s
         
           begin
