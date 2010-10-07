@@ -111,7 +111,7 @@ module MongoidSphinx #:nodoc:
         puts "<classname>#{klass.to_s}</classname>"
         
         klass.search_fields.each do |key|
-          value = hash[key]
+          value = hash[key.to_s]
           puts "<#{key}><![CDATA[[#{value}]]></#{key}>"
         end
 
