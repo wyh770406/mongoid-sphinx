@@ -106,7 +106,7 @@ module MongoidSphinx #:nodoc:
         puts "<sphinx:document id=\"#{sphinx_compatible_id}\">"
         # FIXME: Should we include this?
         puts '<csphinx-class>'
-        puts MongoSphinx::MultiAttribute.encode(klass.to_s)
+        puts MongoidSphinx::MultiAttribute.encode(klass.to_s)
         puts '</csphinx-class>'
         puts "<classname>#{klass.to_s}</classname>"
         
