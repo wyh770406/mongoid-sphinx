@@ -101,7 +101,7 @@ module MongoidSphinx #:nodoc:
     class XMLDoc
 
       def self.stream_for_hash(hash, klass)
-        sphinx_compatible_id = hash['_id'].to_i
+        sphinx_compatible_id = hash['_id'].to_s.to_i
         
         puts "<sphinx:document id=\"#{sphinx_compatible_id}\">"
         # FIXME: Should we include this?
