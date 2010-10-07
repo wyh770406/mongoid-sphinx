@@ -6,7 +6,7 @@ module Mongoid
       # Return an id that is sphinx compatible
       def generate_id
         while true
-          id = 100000000000000000000000 + rand(99999999999999999999999)
+          id = 100000000000000000000000 + rand(9999999999999999999)
           candidate = id.to_s
         
           begin

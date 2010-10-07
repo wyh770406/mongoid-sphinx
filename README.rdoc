@@ -43,7 +43,7 @@ This is a sample configuration for a single "main" index:
   source mongoblog {
     type = xmlpipe2
   
-    xmlpipe_command = "rake sphinx:genxml"
+    xmlpipe_command = rake sphinx:genxml --silent
   }
 
   index mongoblog {
