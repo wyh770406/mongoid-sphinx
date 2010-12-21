@@ -21,7 +21,7 @@ task :release => :build do
   puts "Pushing to Github..."
   system "git push --tags"
   puts "Pushing to rubygems.org..."
-  system "gem push mongoid-#{Mongoid::VERSION}.gem"
+  system "gem push mongoid-#{MongoidSphinx::VERSION}.gem"
 end
 
 task :default => :build
