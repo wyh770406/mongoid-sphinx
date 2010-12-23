@@ -9,8 +9,8 @@ Gem::Specification.new do |s|
   s.version     = MongoidSphinx::VERSION
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Matt Hodgson"]
-  s.email       = ["mhodgson@scenario4.com"]
-  s.homepage    = "http://github.com/mhodgson/mongoid-sphinx"
+  s.email       = ["mhodgson@redbeard-tech.com"]
+  s.homepage    = "http://github.com/redbeard-tech/mongoid-sphinx"
   s.summary     = "A full text indexing extension for MongoDB using Sphinx and Mongoid."
   s.description = "A full text indexing extension for MongoDB using Sphinx and Mongoid."
 
