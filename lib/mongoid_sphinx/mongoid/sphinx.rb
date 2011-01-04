@@ -10,7 +10,7 @@ module Mongoid
         'DateTime' => 'timestamp',
         'Time' => 'timestamp',
         'Float' => 'float',
-        'Integer' => 'uint',
+        'Integer' => 'int',
         'BigDecimal' => 'float',
         'Boolean' => 'bool'
       }
@@ -24,7 +24,7 @@ module Mongoid
         self.search_fields = options[:fields]
         self.search_attributes = {}
         options[:attributes].each do |attrib|
-          self.search_attributes[attrib] = SPHINX_TYPE_MAPPING[self.fields[attrib.to_s].type.to_s] || 'string'
+          self.search_attributes[attrib] = SPHINX_TYPE_MAPPING[self.fields[attrib.to_s].type.to_s] || 'str2ordinal'
         end
       end
       
@@ -42,7 +42,7 @@ module Mongoid
         self.search_attributes.each do |key, value|
           puts "<sphinx:attr name=\"#{key}\" type=\"#{value}\"/>"
         end
-        puts '<sphinx:attr name="classname" type="string"/>'
+        puts '<sphinx:attr name="classname" type="str2ordinal"/>'
         puts '</sphinx:schema>'
         
         self.all.each do |document_hash|
