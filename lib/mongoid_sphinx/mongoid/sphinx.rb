@@ -27,6 +27,20 @@ module Mongoid
           client.sort_by = options[:sort_by]
         end
         
+        if options.key?(:with)
+          client.filters.
+          options[:with].each do |key, value|
+            client.filters << Riddle::Client::Filter.new(key.to_s, value, false)
+          end
+        end
+        
+        if options.key?(:without)
+          client.filters.
+          options[:without].each do |key, value|
+            client.filters << Riddle::Client::Filter.new(key.to_s, value, true)
+          end
+        end
+        
         result = client.query(query)
         
         if result and result[:status] == 0 and (matches = result[:matches])
