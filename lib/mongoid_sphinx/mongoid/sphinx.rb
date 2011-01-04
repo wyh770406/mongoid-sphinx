@@ -5,7 +5,7 @@ module Mongoid
   module Sphinx
     extend ActiveSupport::Concern
     included do
-      cattr_accessor :search_fields 
+      cattr_accessor :search_fields
     end
     
     module ClassMethods
@@ -16,7 +16,7 @@ module Mongoid
       def search(query, options = {})
         client = MongoidSphinx::Configuration.instance.client
                  
-        query = query + " @classname #{@document.class.to_s}"
+        query = query + " @classname #{self.to_s}"
         
         client.match_mode = options[:match_mode] || :extended
         client.limit = options[:limit] if options.key?(:limit)
@@ -29,7 +29,6 @@ module Mongoid
         
         result = client.query(query)
         
-        #TODO
         if result and result[:status] == 0 and (matches = result[:matches])
           classname = nil
           ids = matches.collect do |row|
