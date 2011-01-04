@@ -85,8 +85,10 @@ Sample:
 
       field :title
       field :body
+      field :created_at, :type => 'DateTime'
+      field :comment_count, :type => 'Integer'
 
-      search_index :title, :body
+      search_index(:fields => [:title, :body], :attributes => [:created_at, :comment_count])
     end
 
 You must also create a config/sphinx.yml file with the host and port of your sphinxd process like so:
@@ -114,7 +116,7 @@ Samples:
 
     Post.search('first')
     => [...]
-
+    
     post = Post.search('this is @title post').first
     post.title
     => "First Post"
@@ -129,6 +131,12 @@ document IDs but return the raw IDs instead.
 Sample:
 
     Post.search('my post', :limit => 100)
+    
+You can also specify filters based on attributes. Here is the format:
+
+    post = Post.search('first', :with => {:created_at => 1.day.ago..Time.now})
+    post = Post.search('first', :without => {:created_at => 1.day.ago..Time.now})
+    post = Post.search('first', :with => {:comment_count => [5,6]})
 
 ## Copyright
 
