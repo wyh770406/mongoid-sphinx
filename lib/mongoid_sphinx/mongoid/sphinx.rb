@@ -42,20 +42,13 @@ module Mongoid
         self.search_attributes.each do |key, value|
           puts "<sphinx:attr name=\"#{key}\" type=\"#{value}\"/>"
         end
-        # FIXME: What is this attribute?
-        puts '<sphinx:field name="classname"/>'
-        puts '<sphinx:attr name="csphinx-class" type="multi"/>'
+        puts '<sphinx:attr name="classname" type="string"/>'
         puts '</sphinx:schema>'
         
-        self.find.each do |document_hash|
+        self.all.each do |document_hash|
           sphinx_compatible_id = document_hash['_id'].to_s.to_i - 100000000000000000000000
           
           puts "<sphinx:document id=\"#{sphinx_compatible_id}\">"
-          # FIXME: Should we include this?
-          puts '<csphinx-class>'
-          puts MongoidSphinx::MultiAttribute.encode(self.to_s)
-          puts '</csphinx-class>'
-          puts "<classname>#{self.to_s}</classname>"
           
           self.search_fields.each do |key|
             puts "<#{key}><![CDATA[[#{document_hash[key.to_s]}]]></#{key}>"
@@ -68,6 +61,7 @@ module Mongoid
             end 
             puts "<#{key}><![CDATA[[#{value}]]></#{key}>"
           end
+          puts "<classname>#{self.to_s}</classname>"
           
           puts '</sphinx:document>'
         end
@@ -77,8 +71,6 @@ module Mongoid
       
       def search(query, options = {})
         client = MongoidSphinx::Configuration.instance.client
-                 
-        query = query + " @classname #{self.to_s}"
         
         client.match_mode = options[:match_mode] || :extended
         client.limit = options[:limit] if options.key?(:limit)
@@ -101,17 +93,17 @@ module Mongoid
           end
         end
         
+        client.filters << Riddle::Client::Filter.new('classname', self.to_s, true)
+        
         result = client.query(query)
         
         if result and result[:status] == 0 and (matches = result[:matches])
-          classname = nil
           ids = matches.collect do |row|
-            classname = MongoidSphinx::MultiAttribute.decode(row[:attributes]['csphinx-class'])
             (100000000000000000000000 + row[:doc]).to_s rescue nil
           end.compact
           
           return ids if options[:raw] or ids.empty?
-          return Object.const_get(classname).find(ids)
+          return self.find(ids)
         else
           return []
         end
