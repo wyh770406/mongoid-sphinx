@@ -34,10 +34,10 @@ module Mongoid
           classname = nil
           ids = matches.collect do |row|
             classname = MongoidSphinx::MultiAttribute.decode(row[:attributes]['csphinx-class'])
-            row[:doc].to_s rescue nil
+            (100000000000000000000000 + row[:doc]).to_s rescue nil
           end.compact
           
-          return ids if options[:raw]
+          return ids if options[:raw] or ids.empty?
           return Object.const_get(classname).find(ids)
         else
           return []

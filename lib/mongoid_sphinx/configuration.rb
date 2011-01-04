@@ -13,15 +13,15 @@ module MongoidSphinx
     end
     
     private
-
+    
     # Parse the config/sphinx.yml file - if it exists
     #
     def parse_config
       path = "#{Rails.root}/config/sphinx.yml"
       return unless File.exists?(path)
-
+      
       conf = YAML::load(ERB.new(IO.read(path)).result)[Rails.env]
-
+      
       conf.each do |key,value|
         self.send("#{key}=", value) if self.respond_to?("#{key}=")
       end
