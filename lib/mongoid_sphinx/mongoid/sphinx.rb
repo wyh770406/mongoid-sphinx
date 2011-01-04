@@ -28,7 +28,7 @@ module Mongoid
         end
       end
       
-      def self.sphinx_stream
+      def sphinx_stream
         STDOUT.sync = true # Make sure we really stream..
         
         puts '<?xml version="1.0" encoding="utf-8"?>'
