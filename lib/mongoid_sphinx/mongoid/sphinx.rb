@@ -59,7 +59,7 @@ module Mongoid
               when 'timestamp' : document_hash[key.to_s].to_i
               else document_hash[key.to_s].to_s
             end 
-            puts "<#{key}><![CDATA[[#{value}]]></#{key}>"
+            puts "<#{key}>#{value}</#{key}>"
           end
           puts "<classname>#{self.to_s}</classname>"
           
