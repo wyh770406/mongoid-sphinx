@@ -36,13 +36,13 @@ module Mongoid
         
         # Schema
         puts '<sphinx:schema>'
+        puts '<sphinx:field name="classname"/>'
         self.search_fields.each do |key, value|
           puts "<sphinx:field name=\"#{key}\"/>"
         end
         self.search_attributes.each do |key, value|
           puts "<sphinx:attr name=\"#{key}\" type=\"#{value}\"/>"
         end
-        puts '<sphinx:attr name="classname" type="str2ordinal"/>'
         puts '</sphinx:schema>'
         
         self.all.each do |document_hash|
@@ -50,6 +50,7 @@ module Mongoid
           
           puts "<sphinx:document id=\"#{sphinx_compatible_id}\">"
           
+          puts "<classname>#{self.to_s}</classname>"
           self.search_fields.each do |key|
             puts "<#{key}><![CDATA[[#{document_hash[key.to_s]}]]></#{key}>"
           end
@@ -61,7 +62,6 @@ module Mongoid
             end 
             puts "<#{key}>#{value}</#{key}>"
           end
-          puts "<classname>#{self.to_s}</classname>"
           
           puts '</sphinx:document>'
         end
@@ -83,19 +83,17 @@ module Mongoid
         
         if options.key?(:with)
           options[:with].each do |key, value|
-            client.filters << Riddle::Client::Filter.new(key.to_s, value, false)
+            client.filters << Riddle::Client::Filter.new(key.to_s, value.is_a?(Range) ? value : value.to_a, false)
           end
         end
         
         if options.key?(:without)
           options[:without].each do |key, value|
-            client.filters << Riddle::Client::Filter.new(key.to_s, value, true)
+            client.filters << Riddle::Client::Filter.new(key.to_s, value.is_a?(Range) ? value : value.to_a, true)
           end
         end
         
-        client.filters << Riddle::Client::Filter.new('classname', self.to_s, true)
-        
-        result = client.query(query)
+        result = client.query("#{query} @classname #{self.to_s}")
         
         if result and result[:status] == 0 and (matches = result[:matches])
           ids = matches.collect do |row|
