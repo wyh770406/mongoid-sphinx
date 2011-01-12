@@ -23,49 +23,16 @@ and a MongoDB installation. Just add this to your Gemfile:
 No additional configuraton is needed for interfacing with MongoDB: Setup is
 done when Mongoid is able to talk to the MongoDB server.
 
-A proper "sphinx.conf" file and a script for retrieving index data have to
-be provided for interfacing with Sphinx: Sorry, no ThinkingSphinx like
-magic... :-) Depending on the amount of data, more than one index may be used
-and indexes may be consolidated from time to time.
+MongoidSphinx can now generate your configs and control indexer and searchd through rake 
+tasks (ala Thinking Sphinx). Here is a list of the available rake tasks:
 
-This is a sample configuration for a single "main" index:
-
-    searchd {
-      address = 0.0.0.0
-      port = 3312
-
-      log = ./sphinx/searchd.log
-      query_log = ./sphinx/query.log
-      pid_file = ./sphinx/searchd.pid
-    }
-
-    source mongoblog {
-      type = xmlpipe2
-  
-      xmlpipe_command = rake sphinx:genxml --silent
-    }
-
-    index mongoblog {
-      source = mongoblog
-
-      charset_type = utf-8
-      path = ./sphinx/sphinx_index_main
-    }
-
-Notice the line "xmlpipe_command =". This is what the indexer runs to generate 
-its input. You can change this to whatever works best for you, but I set it up as 
-a rake task, with the following in `lib/tasks/sphinx.rake` .
-
-Here :fields is a list of fields to export. Performance tends to suffer if you export
-everything, so you'll probably want to just list the fields you're indexing.
-
-    namespace :sphinx do
-      task :genxml => :environment do
-        MongoidSphinx::Indexer::XMLDocset.stream(Food)
-      end
-    end
-
-This uses MongoDB cursor to better stream collection. Instead of offset. See: http://groups.google.com/group/mongodb-user/browse_thread/thread/35f01db45ea3b0bd/96ebc49b511a6b41?lnk=gst&q=skip#96ebc49b511a6b41
+    mongoid_sphinx:configure # creates a configuration file in congif/{environment}.sphinx.conf
+    mongoid_sphinx:index     # indexes your data
+    mongoid_sphinx:start     # starts searchd
+    mongoid_sphinx:stop      # stops searchd
+    mongoid_sphinx:restart   # stops then start searchd
+    
+There are also some shortcuts you can use. See lib/mongoid_sphinx/tasks.rb for the full list.
 
 ## Models
 
@@ -88,7 +55,9 @@ Sample:
       field :created_at, :type => 'DateTime'
       field :comment_count, :type => 'Integer'
 
-      search_index(:fields => [:title, :body], :attributes => [:created_at, :comment_count])
+      search_index(:fields => [:title, :body], 
+                   :attributes => [:created_at, :comment_count],
+                   :options => {:stopwords => "#{Rails.root}/config/sphinx/stopwords.txt"})
     end
 
 You must also create a config/sphinx.yml file with the host and port of your sphinxd process like so:

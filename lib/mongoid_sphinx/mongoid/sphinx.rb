@@ -17,15 +17,32 @@ module Mongoid
       
       cattr_accessor :search_fields
       cattr_accessor :search_attributes
+      cattr_accessor :index_options
     end
     
     module ClassMethods
+      
       def search_index(options={})
         self.search_fields = options[:fields]
         self.search_attributes = {}
+        self.index_options = options[:options] || {}
         options[:attributes].each do |attrib|
           self.search_attributes[attrib] = SPHINX_TYPE_MAPPING[self.fields[attrib.to_s].type.to_s] || 'str2ordinal'
         end
+        
+        MongoidSphinx.context.add_indexed_model self
+      end
+      
+      def internal_sphinx_index
+        MongoidSphinx::Index.new(self)
+      end
+      
+      def has_sphinx_indexes?
+        self.search_fields && self.search_fields.length > 0
+      end
+      
+      def to_riddle
+        self.internal_sphinx_index.to_riddle
       end
       
       def sphinx_stream
