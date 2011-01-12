@@ -32,6 +32,14 @@ module MongoidSphinx
     end
   end
   
+  def self.pid_active?(pid)
+    !!Process.kill(0, pid.to_i)
+  rescue Errno::EPERM => e
+    true
+  rescue Exception => e
+    false
+  end
+  
   def self.sphinx_running?
     !!sphinx_pid && pid_active?(sphinx_pid)
   end

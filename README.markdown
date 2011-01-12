@@ -23,8 +23,11 @@ and a MongoDB installation. Just add this to your Gemfile:
 No additional configuraton is needed for interfacing with MongoDB: Setup is
 done when Mongoid is able to talk to the MongoDB server.
 
+## Rake Tasks
+
 MongoidSphinx can now generate your configs and control indexer and searchd through rake 
-tasks (ala Thinking Sphinx). Here is a list of the available rake tasks:
+tasks (many thanks to Pat Allen for his work on Thinking Sphinx here. Much of the code to 
+make this happen is right out of TS). Here is a list of the available rake tasks:
 
     mongoid_sphinx:configure # creates a configuration file in congif/{environment}.sphinx.conf
     mongoid_sphinx:index     # indexes your data
