@@ -64,23 +64,24 @@ module Mongoid
         
         self.all.each do |document_hash|
           sphinx_compatible_id = document_hash['_id'].to_s.to_i - 100000000000000000000000
-          
-          puts "<sphinx:document id=\"#{sphinx_compatible_id}\">"
-          
-          puts "<classname>#{self.to_s}</classname>"
-          self.search_fields.each do |key|
-            puts "<#{key}><![CDATA[[#{document_hash[key.to_s]}]]></#{key}>"
+          if sphinx_compatible_id > 0
+            puts "<sphinx:document id=\"#{sphinx_compatible_id}\">"
+            
+            puts "<classname>#{self.to_s}</classname>"
+            self.search_fields.each do |key|
+              puts "<#{key}><![CDATA[[#{document_hash[key.to_s]}]]></#{key}>"
+            end
+            self.search_attributes.each do |key, value|
+              value = case value
+                when 'bool' : document_hash[key.to_s] ? 1 : 0
+                when 'timestamp' : document_hash[key.to_s].to_i
+                else document_hash[key.to_s].to_s
+              end 
+              puts "<#{key}>#{value}</#{key}>"
+            end
+            
+            puts '</sphinx:document>'
           end
-          self.search_attributes.each do |key, value|
-            value = case value
-              when 'bool' : document_hash[key.to_s] ? 1 : 0
-              when 'timestamp' : document_hash[key.to_s].to_i
-              else document_hash[key.to_s].to_s
-            end 
-            puts "<#{key}>#{value}</#{key}>"
-          end
-          
-          puts '</sphinx:document>'
         end
         
         puts '</sphinx:docset>'
