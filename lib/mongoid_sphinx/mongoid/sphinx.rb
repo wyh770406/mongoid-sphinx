@@ -5,15 +5,17 @@ module Mongoid
   module Sphinx
     extend ActiveSupport::Concern
     included do
-      SPHINX_TYPE_MAPPING = {
-        'Date' => 'timestamp',
-        'DateTime' => 'timestamp',
-        'Time' => 'timestamp',
-        'Float' => 'float',
-        'Integer' => 'int',
-        'BigDecimal' => 'float',
-        'Boolean' => 'bool'
-      }
+      unless defined?(SPHINX_TYPE_MAPPING)
+        SPHINX_TYPE_MAPPING = {
+          'Date' => 'timestamp',
+          'DateTime' => 'timestamp',
+          'Time' => 'timestamp',
+          'Float' => 'float',
+          'Integer' => 'int',
+          'BigDecimal' => 'float',
+          'Boolean' => 'bool'
+        }
+      end
       
       cattr_accessor :search_fields
       cattr_accessor :search_attributes
@@ -69,13 +71,34 @@ module Mongoid
             
             puts "<classname>#{self.to_s}</classname>"
             self.search_fields.each do |key|
-              puts "<#{key}><![CDATA[[#{document_hash[key.to_s]}]]></#{key}>"
+              if document_hash[key.to_s].is_a?(Array)
+                document_hash[key.to_s].join(", ")
+              elsif document_hash[key.to_s].is_a?(Hash)
+                entries = []
+                document_hash[key.to_s].to_a.each do |entry|                    
+                  entries << entry.join(" : ")
+                end
+                puts "<#{key}><![CDATA[[#{entries.join(", ")}]]></#{key}>"
+              else
+                puts "<#{key}><![CDATA[[#{document_hash[key.to_s]}]]></#{key}>"
+              end
             end
             self.search_attributes.each do |key, value|
               value = case value
                 when 'bool' : document_hash[key.to_s] ? 1 : 0
-                when 'timestamp' : document_hash[key.to_s].to_i
-                else document_hash[key.to_s].to_s
+                when 'timestamp' : (document_hash[key.to_s].is_a?(Date) ? document_hash[key.to_s].to_time.to_i : document_hash[key.to_s].to_i)
+                else                   
+                  if document_hash[key.to_s].is_a?(Array)
+                    document_hash[key.to_s].join(", ")
+                  elsif document_hash[key.to_s].is_a?(Hash)
+                    entries = []
+                    document_hash[key.to_s].to_a.each do |entry|                    
+                      entries << entry.join(" : ")
+                    end
+                    entries.join(", ")
+                  else
+                    document_hash[key.to_s].to_s
+                  end
               end 
               puts "<#{key}>#{value}</#{key}>"
             end
