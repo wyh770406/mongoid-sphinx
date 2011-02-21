@@ -69,7 +69,7 @@ module Mongoid
             
             puts "<classname>#{self.to_s}</classname>"
             self.search_fields.each do |key|
-              puts "<#{key}><![CDATA[[#{document_hash[key.to_s]}]]></#{key}>"
+              puts "<#{key}><![CDATA[#{document_hash[key.to_s]}]]></#{key}>"
             end
             self.search_attributes.each do |key, value|
               value = case value
