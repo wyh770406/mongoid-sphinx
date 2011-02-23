@@ -27,7 +27,7 @@ module Mongoid
         self.search_attributes = {}
         self.index_options = options[:options] || {}
         options[:attributes].each do |attrib|
-          self.search_attributes[attrib] = SPHINX_TYPE_MAPPING[self.fields[attrib.to_s].type.to_s] || 'str2ordinal'
+          self.search_attributes[attrib] = SPHINX_TYPE_MAPPING[self.fields[attrib.to_s].class.to_s] || 'str2ordinal'
         end
         
         MongoidSphinx.context.add_indexed_model self
