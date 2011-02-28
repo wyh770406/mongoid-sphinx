@@ -41,7 +41,7 @@ class MongoidSphinx::Context
         model_name = file.gsub(/^#{base}([\w_\/\\]+)\.rb/, '\1')
         
         next if model_name.nil?
-        next if ::ActiveRecord::Base.send(:descendants).detect { |model|
+        next if defined?(::ActiveRecord::Base) && ::ActiveRecord::Base.send(:descendants).detect { |model|
           model.name == model_name.camelize
         }
         

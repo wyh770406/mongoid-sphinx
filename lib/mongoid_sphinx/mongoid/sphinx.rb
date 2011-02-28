@@ -30,7 +30,7 @@ module Mongoid
         self.search_attributes = {}
         self.index_options = options[:options] || {}
         options[:attributes].each do |attrib|
-          self.search_attributes[attrib] = SPHINX_TYPE_MAPPING[self.fields[attrib.to_s].type.to_s] || 'str2ordinal'
+          self.search_attributes[attrib] = SPHINX_TYPE_MAPPING[self.fields[attrib.to_s].class.to_s] || 'str2ordinal'
         end
         
         MongoidSphinx.context.add_indexed_model self
@@ -65,13 +65,13 @@ module Mongoid
         end
         puts '</sphinx:schema>'
         
-        self.all.each do |document_hash|
-          sphinx_compatible_id = document_hash['_id'].to_s.to_i - 100000000000000000000000
+        self.all.each do |document|
+          sphinx_compatible_id = document['_id'].to_s.to_i - 100000000000000000000000
           if sphinx_compatible_id > 0
             puts "<sphinx:document id=\"#{sphinx_compatible_id}\">"
             
             puts "<classname>#{self.to_s}</classname>"
-            self.search_fields.each do |key|
+            self.search_fields.each do |key|              
               if document_hash[key.to_s].is_a?(Array)
                 puts "<#{key}><![CDATA[[#{document_hash[key.to_s].join(", ")}]]></#{key}>"                
               elsif document_hash[key.to_s].is_a?(Hash)
@@ -99,7 +99,7 @@ module Mongoid
                     entries.join(", ")
                   else
                     document_hash[key.to_s].to_s
-                  end
+                  end                  
               end 
               puts "<#{key}>#{value}</#{key}>"
             end
