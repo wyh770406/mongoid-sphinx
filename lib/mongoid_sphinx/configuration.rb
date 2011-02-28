@@ -19,6 +19,7 @@ module MongoidSphinx
       ondisk_dict overshort_step phrase_boundary phrase_boundary_step preopen
       stopwords stopwords_step wordforms )
     
+    attr_accessor :allow_star
     attr_accessor :searchd_file_path, :model_directories, :indexed_models
     attr_accessor :source_options, :index_options
     attr_accessor :configuration, :controller
@@ -34,6 +35,7 @@ module MongoidSphinx
       self.address              = "127.0.0.1"
       self.port                 = 9312
       self.searchd_file_path    = "#{Rails.root}/db/sphinx/#{Rails.env}"
+      self.allow_star           = false
       self.model_directories    = ["#{Rails.root}/app/models/"] + Dir.glob("#{Rails.root}/vendor/plugins/*/app/models/")
       self.indexed_models       = []
       
@@ -163,8 +165,28 @@ module MongoidSphinx
       
       conf.each do |key,value|
         self.send("#{key}=", value) if self.respond_to?("#{key}=")
+        
+        set_sphinx_setting self.source_options, key, value, SourceOptions
+        set_sphinx_setting self.index_options,  key, value, IndexOptions
+        set_sphinx_setting self.index_options,  key, value, CustomOptions
+        set_sphinx_setting @configuration.searchd, key, value
+        set_sphinx_setting @configuration.indexer, key, value
+        
+      end unless conf.nil?
+
+      if self.allow_star
+          self.index_options[:enable_star]    = true
+          self.index_options[:min_prefix_len] = 1
       end
     end
-    
+
+    def set_sphinx_setting(object, key, value, allowed = {})
+      if object.is_a?(Hash)
+        object[key.to_sym] = value if allowed.include?(key.to_s)
+      else
+        object.send("#{key}=", value) if object.respond_to?("#{key}")
+        send("#{key}=", value) if self.respond_to?("#{key}")
+      end
+    end
   end
 end
