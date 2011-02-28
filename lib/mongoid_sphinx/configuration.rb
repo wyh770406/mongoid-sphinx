@@ -167,8 +167,7 @@ module MongoidSphinx
         self.send("#{key}=", value) if self.respond_to?("#{key}=")
         
         set_sphinx_setting self.source_options, key, value, SourceOptions
-        set_sphinx_setting self.index_options,  key, value, IndexOptions
-        set_sphinx_setting self.index_options,  key, value, CustomOptions
+        set_sphinx_setting self.index_options,  key, value, IndexOptions        
         set_sphinx_setting @configuration.searchd, key, value
         set_sphinx_setting @configuration.indexer, key, value
         
