@@ -20,6 +20,7 @@ module Mongoid
       cattr_accessor :search_fields
       cattr_accessor :search_attributes
       cattr_accessor :index_options
+      cattr_accessor :sphinx_index
     end
     
     module ClassMethods
@@ -36,7 +37,7 @@ module Mongoid
       end
       
       def internal_sphinx_index
-        MongoidSphinx::Index.new(self)
+        self.sphinx_index ||= MongoidSphinx::Index.new(self)
       end
       
       def has_sphinx_indexes?
@@ -72,7 +73,7 @@ module Mongoid
             puts "<classname>#{self.to_s}</classname>"
             self.search_fields.each do |key|
               if document_hash[key.to_s].is_a?(Array)
-                document_hash[key.to_s].join(", ")
+                puts "<#{key}><![CDATA[[#{document_hash[key.to_s].join(", ")}]]></#{key}>"                
               elsif document_hash[key.to_s].is_a?(Hash)
                 entries = []
                 document_hash[key.to_s].to_a.each do |entry|                    
@@ -149,5 +150,38 @@ module Mongoid
       end
     end
     
+    def search_ids(id_range, options = {})
+      client = MongoidSphinx::Configuration.instance.client
+      
+      if id_range.is_a?(Range)
+        client.id_range = id_range
+      elsif id_range.is_a?(Fixnum)
+        client.id_range = id_range..id_range
+      else
+        return []
+      end
+      
+      client.match_mode = :extended
+      client.limit = options[:limit] if options.key?(:limit)
+      client.max_matches = options[:max_matches] if options.key?(:max_matches)
+      
+      result = client.query("* @classname #{self.to_s}")
+      
+      if result and result[:status] == 0 and (matches = result[:matches])
+        ids = matches.collect do |row|
+          (100000000000000000000000 + row[:doc]).to_s rescue nil
+        end.compact
+        
+        return ids if options[:raw] or ids.empty?
+        return self.find(ids)
+      else
+        return false
+      end
+    end    
+    
+    private
+    def sphinx_id
+      self._id.to_s.to_i - 100000000000000000000000
+    end
   end
 end
