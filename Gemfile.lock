@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    mongoid-sphinx (0.0.9)
+    mongoid-sphinx (0.1.1)
       mongoid (>= 2.0.0.beta.19)
       riddle (~> 1.1.0)
 
