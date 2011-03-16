@@ -6,7 +6,7 @@ require 'mongoid_sphinx/context'
 require 'mongoid_sphinx/index'
 require 'mongoid_sphinx/mongoid/identity'
 require 'mongoid_sphinx/mongoid/sphinx'
-require 'mongoid_sphinx/railtie'
+require 'mongoid_sphinx/railtie' if defined?(Rails)
 
 module MongoidSphinx
   
