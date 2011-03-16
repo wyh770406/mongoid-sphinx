@@ -163,7 +163,11 @@ module MongoidSphinx
       conf = YAML::load(ERB.new(IO.read(path)).result)[@env]
       
       conf.each do |key,value|
-        self.send("#{key}=", value) if self.respond_to?("#{key}=")
+        if IndexOptions.include?(key.to_s)
+          self.index_options[key.to_sym] = value
+        else
+          self.send("#{key}=", value) if self.respond_to?("#{key}=")
+        end
       end
     end
     
