@@ -69,7 +69,9 @@ module Mongoid
             
             puts "<classname>#{self.to_s}</classname>"
             self.search_fields.each do |key|
-              puts "<#{key}><![CDATA[#{document.send(key.to_s)}]]></#{key}>"
+              if document.respond_to?(key.to_sym)
+                puts "<#{key}><![CDATA[#{document.send(key.to_s)}]]></#{key}>"
+              end
             end
             self.search_attributes.each do |key, value|
               value = case value
