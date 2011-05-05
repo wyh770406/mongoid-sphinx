@@ -24,17 +24,18 @@ module MongoidSphinx
     attr_accessor :configuration, :controller
     
     def initialize
+      init_root_env
       @configuration = Riddle::Configuration.new
-      @configuration.searchd.pid_file   = "#{Rails.root}/log/searchd.#{Rails.env}.pid"
-      @configuration.searchd.log        = "#{Rails.root}/log/searchd.log"
-      @configuration.searchd.query_log  = "#{Rails.root}/log/searchd.query.log"
+      @configuration.searchd.pid_file   = "#{@root}/log/searchd.#{@env}.pid"
+      @configuration.searchd.log        = "#{@root}/log/searchd.log"
+      @configuration.searchd.query_log  = "#{@root}/log/searchd.query.log"
       
-      @controller = Riddle::Controller.new @configuration, "#{Rails.root}/config/#{Rails.env}.sphinx.conf"
+      @controller = Riddle::Controller.new @configuration, "#{@root}/config/#{@env}.sphinx.conf"
       
       self.address              = "127.0.0.1"
       self.port                 = 9312
-      self.searchd_file_path    = "#{Rails.root}/db/sphinx/#{Rails.env}"
-      self.model_directories    = ["#{Rails.root}/app/models/"] + Dir.glob("#{Rails.root}/vendor/plugins/*/app/models/")
+      self.searchd_file_path    = "#{@root}/db/sphinx/#{@env}"
+      self.model_directories    = ["#{@root}/app/models/"] + Dir.glob("#{@root}/vendor/plugins/*/app/models/")
       self.indexed_models       = []
       
       self.source_options  = {
@@ -156,15 +157,29 @@ module MongoidSphinx
     private
     
     def parse_config
-      path = "#{Rails.root}/config/sphinx.yml"
+      path = "#{@root}/config/sphinx.yml"
       return unless File.exists?(path)
       
-      conf = YAML::load(ERB.new(IO.read(path)).result)[Rails.env]
+      conf = YAML::load(ERB.new(IO.read(path)).result)[@env]
       
       conf.each do |key,value|
-        self.send("#{key}=", value) if self.respond_to?("#{key}=")
+        if IndexOptions.include?(key.to_s)
+          self.index_options[key.to_sym] = value
+        else
+          self.send("#{key}=", value) if self.respond_to?("#{key}=")
+        end
       end
     end
     
+    def init_root_env
+      if defined?(Rails)
+        @root = Rails.root
+        @env = Rails.env
+      else
+        @root = Dir.pwd
+        @env = ENV['RACK_ENV'] || 'development'
+      end
+    end
+
   end
 end

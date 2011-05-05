@@ -7,7 +7,11 @@ module MongoidSphinx
       @model        = model
       @options      = model.index_options
       @source       = Riddle::Configuration::XMLSource.new( "#{core_name}_0", config.source_options[:type])
-      @source.xmlpipe_command = "RAILS_ENV=#{Rails.env} script/rails runner '#{model.to_s}.sphinx_stream'"
+      if defined?(Rails)
+        @source.xmlpipe_command = "RAILS_ENV=#{Rails.env} script/rails runner '#{model.to_s}.sphinx_stream'"
+      else
+        @source.xmlpipe_command = "script/runner '#{model.to_s}.sphinx_stream'"
+      end
     end
     
     def core_name
