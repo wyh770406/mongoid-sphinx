@@ -62,7 +62,7 @@ module Mongoid
         end
         puts '</sphinx:schema>'
         
-        self.all.each do |document|
+        self.all.entries.each do |document|
           sphinx_compatible_id = document['_id'].to_s.to_i - 100000000000000000000000
           if sphinx_compatible_id > 0
             puts "<sphinx:document id=\"#{sphinx_compatible_id}\">"
