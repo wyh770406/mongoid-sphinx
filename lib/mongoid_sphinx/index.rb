@@ -18,6 +18,10 @@ module MongoidSphinx
       "#{name}_core"
     end
     
+    def delta_name
+      "#{name}_delta"
+    end
+    
     def self.name_for(model)
       model.name.underscore.tr(':/\\', '_')
     end

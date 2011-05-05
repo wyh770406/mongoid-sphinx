@@ -19,6 +19,7 @@ module MongoidSphinx
       ondisk_dict overshort_step phrase_boundary phrase_boundary_step preopen
       stopwords stopwords_step wordforms )
     
+    attr_accessor :allow_star
     attr_accessor :searchd_file_path, :model_directories, :indexed_models
     attr_accessor :source_options, :index_options
     attr_accessor :configuration, :controller
@@ -35,6 +36,7 @@ module MongoidSphinx
       self.address              = "127.0.0.1"
       self.port                 = 9312
       self.searchd_file_path    = "#{@root}/db/sphinx/#{@env}"
+      self.allow_star           = false
       self.model_directories    = ["#{@root}/app/models/"] + Dir.glob("#{@root}/vendor/plugins/*/app/models/")
       self.indexed_models       = []
       
@@ -162,12 +164,20 @@ module MongoidSphinx
       
       conf = YAML::load(ERB.new(IO.read(path)).result)[@env]
       
-      conf.each do |key,value|
-        if IndexOptions.include?(key.to_s)
-          self.index_options[key.to_sym] = value
-        else
+      unless conf.nil?
+        conf.each do |key,value|
           self.send("#{key}=", value) if self.respond_to?("#{key}=")
+          
+          set_sphinx_setting self.source_options, key, value, SourceOptions
+          set_sphinx_setting self.index_options,  key, value, IndexOptions
+          set_sphinx_setting @configuration.searchd, key, value
+          set_sphinx_setting @configuration.indexer, key, value
         end
+      end
+      
+      if self.allow_star
+        self.index_options[:enable_star]    = true
+        self.index_options[:min_prefix_len] = 1
       end
     end
     
@@ -180,6 +190,14 @@ module MongoidSphinx
         @env = ENV['RACK_ENV'] || 'development'
       end
     end
-
+    
+    def set_sphinx_setting(object, key, value, allowed = {})
+      if object.is_a?(Hash)
+        object[key.to_sym] = value if allowed.include?(key.to_s)
+      else
+        object.send("#{key}=", value) if object.respond_to?("#{key}")
+        send("#{key}=", value) if self.respond_to?("#{key}")
+      end
+    end
   end
 end
