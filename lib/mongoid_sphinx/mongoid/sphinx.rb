@@ -113,9 +113,10 @@ module Mongoid
             
           puts '</sphinx:document>'
         end
+
+        puts '</sphinx:docset>'
       end
-        
-      puts '</sphinx:docset>'
+
     end
       
     def search(query, options = {})
