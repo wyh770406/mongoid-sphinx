@@ -89,106 +89,106 @@ module Mongoid
             self.search_attributes.each do |key, value|
               if document.respond_to?(key.to_sym)
                 value = case value
-                  when 'bool' 
-                    document[key.to_s] ? 1 : 0
-                  when 'timestamp'
-                    document[key.to_s].is_a?(Date) ? document[key.to_s].to_time.to_i : document[key.to_s].to_i
-                  else 
-                    if document[key.to_s].is_a?(Array)
-                      document[key.to_s].join(", ")
-                    elsif document[key.to_s].is_a?(Hash)
-                      entries = []
-                      document[key.to_s].to_a.each do |entry|                    
-                        entries << entry.join(" : ")
-                      end
-                      entries.join(", ")
-                    else
-                      document[key.to_s].to_s
+                when 'bool'
+                  document[key.to_s] ? 1 : 0
+                when 'timestamp'
+                  document[key.to_s].is_a?(Date) ? document[key.to_s].to_time.to_i : document[key.to_s].to_i
+                else
+                  if document[key.to_s].is_a?(Array)
+                    document[key.to_s].join(", ")
+                  elsif document[key.to_s].is_a?(Hash)
+                    entries = []
+                    document[key.to_s].to_a.each do |entry|
+                      entries << entry.join(" : ")
                     end
+                    entries.join(", ")
+                  else
+                    document[key.to_s].to_s
                   end
-                end 
-                puts "<#{key}>#{value}</#{key}>"
+                end
               end
+              puts "<#{key}>#{value}</#{key}>"
             end
+          end
             
-            puts '</sphinx:document>'
-          end
-        end
-        
-        puts '</sphinx:docset>'
-      end
-      
-      def search(query, options = {})
-        client = MongoidSphinx::Configuration.instance.client
-        
-        client.match_mode = options[:match_mode] || :extended
-        client.limit = options[:limit] if options.key?(:limit)
-        client.max_matches = options[:max_matches] if options.key?(:max_matches)
-        
-        if options.key?(:sort_by)
-          client.sort_mode = :extended
-          client.sort_by = options[:sort_by]
-        end
-        
-        if options.key?(:with)
-          options[:with].each do |key, value|
-            client.filters << Riddle::Client::Filter.new(key.to_s, value.is_a?(Range) ? value : value.to_a, false)
-          end
-        end
-        
-        if options.key?(:without)
-          options[:without].each do |key, value|
-            client.filters << Riddle::Client::Filter.new(key.to_s, value.is_a?(Range) ? value : value.to_a, true)
-          end
-        end
-        
-        result = client.query("#{query} @classname #{self.to_s}")
-        
-        if result and result[:status] == 0 and (matches = result[:matches])
-          ids = matches.collect do |row|
-            (100000000000000000000000 + row[:doc]).to_s rescue nil
-          end.compact
-          
-          return ids if options[:raw] or ids.empty?
-          return self.find(ids)
-        else
-          return []
+          puts '</sphinx:document>'
         end
       end
+        
+      puts '</sphinx:docset>'
     end
-    
-    def search_ids(id_range, options = {})
+      
+    def search(query, options = {})
       client = MongoidSphinx::Configuration.instance.client
-      
-      if id_range.is_a?(Range)
-        client.id_range = id_range
-      elsif id_range.is_a?(Fixnum)
-        client.id_range = id_range..id_range
-      else
-        return []
-      end
-      
-      client.match_mode = :extended
+        
+      client.match_mode = options[:match_mode] || :extended
       client.limit = options[:limit] if options.key?(:limit)
       client.max_matches = options[:max_matches] if options.key?(:max_matches)
-      
-      result = client.query("* @classname #{self.to_s}")
-      
+        
+      if options.key?(:sort_by)
+        client.sort_mode = :extended
+        client.sort_by = options[:sort_by]
+      end
+        
+      if options.key?(:with)
+        options[:with].each do |key, value|
+          client.filters << Riddle::Client::Filter.new(key.to_s, value.is_a?(Range) ? value : value.to_a, false)
+        end
+      end
+        
+      if options.key?(:without)
+        options[:without].each do |key, value|
+          client.filters << Riddle::Client::Filter.new(key.to_s, value.is_a?(Range) ? value : value.to_a, true)
+        end
+      end
+        
+      result = client.query("#{query} @classname #{self.to_s}")
+        
       if result and result[:status] == 0 and (matches = result[:matches])
         ids = matches.collect do |row|
           (100000000000000000000000 + row[:doc]).to_s rescue nil
         end.compact
-        
+          
         return ids if options[:raw] or ids.empty?
         return self.find(ids)
       else
-        return false
+        return []
       end
-    end    
-    
-    private
-    def sphinx_id
-      self._id.to_s.to_i - 100000000000000000000000
     end
   end
+    
+  def search_ids(id_range, options = {})
+    client = MongoidSphinx::Configuration.instance.client
+      
+    if id_range.is_a?(Range)
+      client.id_range = id_range
+    elsif id_range.is_a?(Fixnum)
+      client.id_range = id_range..id_range
+    else
+      return []
+    end
+      
+    client.match_mode = :extended
+    client.limit = options[:limit] if options.key?(:limit)
+    client.max_matches = options[:max_matches] if options.key?(:max_matches)
+      
+    result = client.query("* @classname #{self.to_s}")
+      
+    if result and result[:status] == 0 and (matches = result[:matches])
+      ids = matches.collect do |row|
+        (100000000000000000000000 + row[:doc]).to_s rescue nil
+      end.compact
+        
+      return ids if options[:raw] or ids.empty?
+      return self.find(ids)
+    else
+      return false
+    end
+  end
+    
+  private
+  def sphinx_id
+    self._id.to_s.to_i - 100000000000000000000000
+  end
 end
+
